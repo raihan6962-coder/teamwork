@@ -1,0 +1,25 @@
+{
+  "name": "telegram-task-reminder-bot",
+  "version": "1.0.0",
+  "description": "Production-ready Telegram Task Reminder Bot for Vercel",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+    "setup-webhook": "node --loader ts-node/esm scripts/setup-webhook.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/uuid": "^10.0.0",
+    "@vercel/node": "^3.2.15",
+    "typescript": "^5.8.3"
+  }
+}
