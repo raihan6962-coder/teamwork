@@ -47,11 +47,29 @@ export const taskRepository = {
   async create(data) {
     const id = randomUUID();
     const now = new Date().toISOString();
+    const row = {
+      id,
+      telegram_user_id: data.telegram_user_id,
+      telegram_chat_id: data.telegram_chat_id,
+      app_name: data.app_name,
+      country: data.country,
+      country_code: data.country_code,
+      completed_at: data.completed_at,
+      reminder_at: data.reminder_at,
+      reminder_duration: data.reminder_duration,
+      created_at: now,
+      updated_at: now,
+      timezone: data.timezone,
+      notes: data.notes || null,
+      reminder_sent: false,
+      status: "pending",
+      deleted_at: null,
+    };
     await execute(
       "INSERT INTO tasks (id, telegram_user_id, telegram_chat_id, app_name, country, country_code, completed_at, reminder_at, reminder_duration, created_at, updated_at, timezone, notes, reminder_sent, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, false, 'pending')",
       [id, data.telegram_user_id, data.telegram_chat_id, data.app_name, data.country, data.country_code, data.completed_at, data.reminder_at, data.reminder_duration, now, now, data.timezone, data.notes || null]
     );
-    return this.findById(id);
+    return row;
   },
 
   async update(id, telegramUserId, data) {

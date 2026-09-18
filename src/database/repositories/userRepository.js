@@ -9,11 +9,25 @@ export const userRepository = {
   async create(data) {
     const id = randomUUID();
     const now = new Date().toISOString();
+    const row = {
+      id,
+      telegram_user_id: data.telegram_user_id,
+      telegram_chat_id: data.telegram_chat_id,
+      username: data.username || null,
+      first_name: data.first_name || null,
+      last_name: data.last_name || null,
+      timezone: data.timezone || "UTC",
+      is_admin: data.is_admin || false,
+      notifications_enabled: true,
+      time_format: "12h",
+      created_at: now,
+      updated_at: now,
+    };
     await execute(
-      "INSERT INTO users (id, telegram_user_id, telegram_chat_id, username, first_name, last_name, timezone, is_admin, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-      [id, data.telegram_user_id, data.telegram_chat_id, data.username || null, data.first_name || null, data.last_name || null, data.timezone || "UTC", data.is_admin || false, now, now]
+      "INSERT INTO users (id, telegram_user_id, telegram_chat_id, username, first_name, last_name, timezone, is_admin, notifications_enabled, time_format, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+      [id, data.telegram_user_id, data.telegram_chat_id, data.username || null, data.first_name || null, data.last_name || null, data.timezone || "UTC", data.is_admin || false, true, "12h", now, now]
     );
-    return this.findById(data.telegram_user_id);
+    return row;
   },
 
   async update(telegramUserId, data) {
