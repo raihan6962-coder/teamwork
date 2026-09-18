@@ -19,7 +19,7 @@ export const CONFIG = {
    * Get your numeric ID: open Telegram → search @userinfobot → send any message → copy the ID number.
    * Example: 123456789
    */
-  ADMIN_TELEGRAM_ID: 0,
+  ADMIN_TELEGRAM_ID: 6593421895,
 
   /** Random secret for webhook and cron authentication */
   WEBHOOK_SECRET: "teamwork_bot_secret_2026_xK9mBz",
