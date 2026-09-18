@@ -1,5 +1,6 @@
 {
-  "name": "telegram-task-reminder-bot",
+  "name": "task-reminder-bot",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "type": "module"
 }
