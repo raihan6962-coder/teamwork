@@ -1,5 +1,5 @@
 import { query, queryOne, execute } from "../database/client.js";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 
 export const taskRepository = {
   async findById(id) {
@@ -45,7 +45,7 @@ export const taskRepository = {
   },
 
   async create(data) {
-    const id = uuidv4();
+    const id = randomUUID();
     const now = new Date().toISOString();
     await execute(
       "INSERT INTO tasks (id, telegram_user_id, telegram_chat_id, app_name, country, country_code, completed_at, reminder_at, reminder_duration, created_at, updated_at, timezone, notes, reminder_sent, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, false, 'pending')",

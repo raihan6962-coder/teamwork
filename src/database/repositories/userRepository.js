@@ -1,5 +1,5 @@
-import { queryOne, execute } from "../database/client.js";
-import { v4 as uuidv4 } from "uuid";
+import { query, queryOne, execute } from "../database/client.js";
+import { randomUUID } from "crypto";
 
 export const userRepository = {
   async findById(telegramUserId) {
@@ -7,7 +7,7 @@ export const userRepository = {
   },
 
   async create(data) {
-    const id = uuidv4();
+    const id = randomUUID();
     const now = new Date().toISOString();
     await execute(
       "INSERT INTO users (id, telegram_user_id, telegram_chat_id, username, first_name, last_name, timezone, is_admin, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
@@ -36,7 +36,6 @@ export const userRepository = {
   },
 
   async getAllChatIds() {
-    const { query } = await import("../database/client.js");
     return query("SELECT DISTINCT telegram_chat_id FROM users WHERE notifications_enabled = true");
   },
 };

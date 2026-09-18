@@ -1,11 +1,5 @@
 {
   "name": "telegram-task-reminder-bot",
   "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
-    "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0",
-    "uuid": "^11.1.0"
-  }
+  "private": true
 }

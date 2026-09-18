@@ -1,9 +1,9 @@
 import { execute } from "../database/client.js";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 
 export const broadcastRepository = {
   async create(data) {
-    const id = uuidv4();
+    const id = randomUUID();
     const now = new Date().toISOString();
     await execute(
       "INSERT INTO broadcast_logs (id, admin_user_id, message, total_recipients, successful, failed, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",

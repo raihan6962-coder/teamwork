@@ -1,5 +1,4 @@
 import { queryOne, execute } from "../database/client.js";
-import { v4 as uuidv4 } from "uuid";
 
 export const conversationRepository = {
   async getState(telegramUserId) {
