@@ -8,7 +8,9 @@ import { logger } from "../../src/lib/logger.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   const secretHeader = req.headers["x-telegram-bot-api-secret-token"];
-  if (secretHeader !== CONFIG.WEBHOOK_SECRET) return res.status(403).json({ error: "Forbidden" });
+  const bypassToken = req.headers["x-vercel-protection-bypass"];
+  const bypassEnv = process.env.VERCEL_PROTECTION_BYPASS_TOKEN;
+  if (secretHeader !== CONFIG.WEBHOOK_SECRET && bypassToken !== bypassEnv) return res.status(403).json({ error: "Forbidden" });
   try {
     await initDatabase();
     const update = req.body;
