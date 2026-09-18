@@ -1,4 +1,4 @@
-import { query, queryOne, execute } from "../database/client.js";
+import { query, queryOne, execute } from "../client.js";
 import { randomUUID } from "crypto";
 
 export const taskRepository = {

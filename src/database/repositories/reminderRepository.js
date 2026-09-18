@@ -1,4 +1,4 @@
-import { execute } from "../database/client.js";
+import { execute } from "../client.js";
 import { randomUUID } from "crypto";
 
 export const broadcastRepository = {

@@ -1,4 +1,4 @@
-import { queryOne, execute } from "../database/client.js";
+import { queryOne, execute } from "../client.js";
 
 export const processedUpdateRepository = {
   async isProcessed(updateId) {
