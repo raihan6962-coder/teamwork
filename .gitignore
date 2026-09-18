@@ -1,9 +1,2 @@
 node_modules/
-dist/
-.env
-.env.local
 .vercel/
-.next/
-*.log
-.DS_Store
-thumbs.db

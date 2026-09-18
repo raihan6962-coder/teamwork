@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT DEFAULT NOW(),
   updated_at TEXT DEFAULT NOW()
 );
-
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   telegram_user_id BIGINT NOT NULL,
@@ -33,7 +32,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   reminder_sent BOOLEAN DEFAULT false,
   deleted_at TEXT
 );
-
 CREATE TABLE IF NOT EXISTS reminders (
   id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL,
@@ -46,7 +44,6 @@ CREATE TABLE IF NOT EXISTS reminders (
   created_at TEXT DEFAULT NOW(),
   FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
-
 CREATE TABLE IF NOT EXISTS broadcast_logs (
   id TEXT PRIMARY KEY,
   admin_user_id BIGINT NOT NULL,
@@ -56,23 +53,17 @@ CREATE TABLE IF NOT EXISTS broadcast_logs (
   failed INTEGER DEFAULT 0,
   created_at TEXT DEFAULT NOW()
 );
-
 CREATE TABLE IF NOT EXISTS processed_updates (
   update_id BIGINT PRIMARY KEY,
   processed_at TEXT DEFAULT NOW()
 );
-
 CREATE TABLE IF NOT EXISTS conversation_states (
   telegram_user_id BIGINT PRIMARY KEY,
   state TEXT NOT NULL,
   data TEXT NOT NULL,
   updated_at TEXT DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(telegram_user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_reminder ON tasks(reminder_at, status);
-CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status, reminder_at);
-CREATE INDEX IF NOT EXISTS idx_reminders_task ON reminders(task_id);
-CREATE INDEX IF NOT EXISTS idx_users_telegram ON users(telegram_user_id);
 `;
