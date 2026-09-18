@@ -3,6 +3,7 @@ import { CONFIG } from "../../src/config.js";
 import { routeUpdate } from "../../src/bot/router.js";
 import { initDatabase } from "../../src/database/client.js";
 import { processedUpdateRepository } from "../../src/database/repositories/processedUpdateRepository.js";
+import { processPendingReminders } from "../../src/services/reminderService.js";
 import { logger } from "../../src/lib/logger.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -12,9 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const secretHeader = req.headers["x-telegram-bot-api-secret-token"];
   if (secretHeader !== CONFIG.WEBHOOK_SECRET) {
-    logger.warn("Invalid webhook secret", {
-      ip: req.headers["x-forwarded-for"],
-    });
+    logger.warn("Invalid webhook secret");
     return res.status(403).json({ error: "Forbidden" });
   }
 
@@ -36,6 +35,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await processedUpdateRepository.markProcessed(update.update_id);
 
     await routeUpdate(update);
+
+    // Also check for due reminders on every webhook call (hybrid cron)
+    try {
+      await processPendingReminders();
+    } catch {
+      // Non-critical, don't fail the webhook
+    }
 
     return res.status(200).json({ ok: true });
   } catch (error) {
