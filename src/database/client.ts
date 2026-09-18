@@ -4,22 +4,40 @@ import { logger } from "../lib/logger.js";
 
 let dbInitialized = false;
 let useInMemory = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let sqlFn: any = null;
 
 // In-memory storage for development/fallback
 const memoryStore: Map<string, Record<string, unknown>[]> = new Map();
 
-function getDb() {
-  if (CONFIG.DATABASE_URL && CONFIG.DATABASE_URL !== "" && CONFIG.DATABASE_URL !== "PASTE_YOUR_DATABASE_URL_HERE") {
-    const { neon } = require("@neondatabase/serverless");
-    return neon(CONFIG.DATABASE_URL);
+function isDbConfigured(): boolean {
+  return (
+    !!CONFIG.DATABASE_URL &&
+    CONFIG.DATABASE_URL !== "" &&
+    CONFIG.DATABASE_URL !== "PASTE_YOUR_DATABASE_URL_HERE"
+  );
+}
+
+async function getSql() {
+  if (sqlFn) return sqlFn;
+  if (!isDbConfigured()) {
+    useInMemory = true;
+    return null;
   }
-  useInMemory = true;
-  return null;
+  try {
+    const { neon } = await import("@neondatabase/serverless");
+    sqlFn = neon(CONFIG.DATABASE_URL);
+    return sqlFn;
+  } catch (error) {
+    logger.warn("Failed to connect to database — using in-memory fallback", error);
+    useInMemory = true;
+    return null;
+  }
 }
 
 export async function initDatabase(): Promise<void> {
   if (dbInitialized) return;
-  const sql = getDb();
+  const sql = await getSql();
   if (!sql) {
     logger.info("No DATABASE_URL configured — using in-memory storage (data resets on cold start)");
     dbInitialized = true;
@@ -45,7 +63,7 @@ export async function query<T = Record<string, unknown>>(
   text: string,
   params?: unknown[]
 ): Promise<T[]> {
-  const sql = getDb();
+  const sql = await getSql();
   if (!sql) {
     return inMemoryQuery<T>(text, params);
   }
@@ -70,7 +88,7 @@ export async function execute(
   text: string,
   params?: unknown[]
 ): Promise<{ rowCount: number }> {
-  const sql = getDb();
+  const sql = await getSql();
   if (!sql) {
     return inMemoryExecute(text, params);
   }
@@ -84,7 +102,7 @@ export async function execute(
 }
 
 export function isUsingInMemory(): boolean {
-  return useInMemory || !CONFIG.DATABASE_URL || CONFIG.DATABASE_URL === "" || CONFIG.DATABASE_URL === "PASTE_YOUR_DATABASE_URL_HERE";
+  return useInMemory || !isDbConfigured();
 }
 
 // ─────────────────────────────────────────────
@@ -106,6 +124,11 @@ function getTableName(sql: string): string | null {
 
 function ensureTable(name: string) {
   if (!memoryStore.has(name)) memoryStore.set(name, []);
+}
+
+function inMemoryExecute(text: string, params?: unknown[]): { rowCount: number } {
+  inMemoryQuery(text, params);
+  return { rowCount: 1 };
 }
 
 function inMemoryQuery<T>(sql: string, params?: unknown[]): T[] {
@@ -150,7 +173,6 @@ function inMemoryQuery<T>(sql: string, params?: unknown[]): T[] {
         const eqMatch = cond.match(/(\w+)\s*=\s*'?(\w+)'?/);
         if (eqMatch) {
           const [, col, val] = eqMatch;
-          // Check if val is a positional parameter like $1, $2
           const paramMatch = val.match(/^\$(\d+)$/);
           if (paramMatch && params) {
             return String(row[col]) === String(params[parseInt(paramMatch[1]) - 1]);
@@ -163,10 +185,6 @@ function inMemoryQuery<T>(sql: string, params?: unknown[]): T[] {
         }
         if (cond.includes("is not null")) {
           const col = cond.replace(/\s+is\s+not\s+null/, "").trim();
-          return row[col] !== null && row[col] !== undefined;
-        }
-        if (cond.includes("not null")) {
-          const col = cond.replace(/\s+not\s+null/, "").trim();
           return row[col] !== null && row[col] !== undefined;
         }
         return true;
@@ -226,12 +244,11 @@ function inMemoryQuery<T>(sql: string, params?: unknown[]): T[] {
   return rows as unknown as T[];
 }
 
-function inMemoryInsert(tableName: string, _sql: string, params?: unknown[]) {
+function inMemoryInsert(tableName: string, sql: string, params?: unknown[]) {
   ensureTable(tableName);
   const row: Record<string, unknown> = {};
 
-  // Parse columns from INSERT INTO table (col1, col2, ...) VALUES ($1, $2, ...)
-  const colMatch = _sql.match(/\(([^)]+)\)/i);
+  const colMatch = sql.match(/\(([^)]+)\)/i);
   if (colMatch && params) {
     const cols = colMatch[1].split(",").map((c: string) => c.trim());
     cols.forEach((col: string, i: number) => {
@@ -242,11 +259,11 @@ function inMemoryInsert(tableName: string, _sql: string, params?: unknown[]) {
   memoryStore.get(tableName)!.push(row);
 }
 
-function inMemoryUpsert(tableName: string, _sql: string, params?: unknown[]) {
+function inMemoryUpsert(tableName: string, sql: string, params?: unknown[]) {
   ensureTable(tableName);
   const row: Record<string, unknown> = {};
 
-  const colMatch = _sql.match(/\(([^)]+)\)/i);
+  const colMatch = sql.match(/\(([^)]+)\)/i);
   if (colMatch && params) {
     const cols = colMatch[1].split(",").map((c: string) => c.trim());
     cols.forEach((col: string, i: number) => {
@@ -255,7 +272,6 @@ function inMemoryUpsert(tableName: string, _sql: string, params?: unknown[]) {
   }
 
   const store = memoryStore.get(tableName)!;
-  // Try to find existing by first column (usually primary key)
   const firstCol = Object.keys(row)[0];
   const idx = store.findIndex((r) => String(r[firstCol]) === String(row[firstCol]));
   if (idx >= 0) {
@@ -265,11 +281,10 @@ function inMemoryUpsert(tableName: string, _sql: string, params?: unknown[]) {
   }
 }
 
-function inMemoryUpdate(tableName: string, _sql: string, params?: unknown[]) {
+function inMemoryUpdate(tableName: string, sql: string, params?: unknown[]) {
   ensureTable(tableName);
-  const lower = _sql.toLowerCase();
+  const lower = sql.toLowerCase();
 
-  // Parse SET clause
   const setMatch = lower.match(/set\s+(.+?)\s+where/);
   if (!setMatch) return;
 
@@ -294,7 +309,6 @@ function inMemoryUpdate(tableName: string, _sql: string, params?: unknown[]) {
     });
 
     if (matchesWhere) {
-      // Apply SET updates
       const setParts = setMatch[1].split(/,(?=\s*\w+\s*=)/);
       setParts.forEach((part: string) => {
         const kvMatch = part.match(/(\w+)\s*=\s*\$?(\d+|'[^']*'|true|false|NULL)/);
@@ -318,9 +332,9 @@ function inMemoryUpdate(tableName: string, _sql: string, params?: unknown[]) {
   });
 }
 
-function inMemoryDelete(tableName: string, _sql: string, params?: unknown[]) {
+function inMemoryDelete(tableName: string, sql: string, params?: unknown[]) {
   ensureTable(tableName);
-  const lower = _sql.toLowerCase();
+  const lower = sql.toLowerCase();
   const whereMatch = lower.match(/where\s+(.+)$/);
   if (!whereMatch) {
     memoryStore.set(tableName, []);
