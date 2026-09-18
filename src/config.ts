@@ -7,26 +7,29 @@
  * This file contains sensitive credentials.
  * Your Git repository MUST remain PRIVATE.
  * Do NOT share this repository publicly.
- *
- * To configure:
- * 1. Replace TELEGRAM_BOT_TOKEN with your BotFather token
- * 2. Replace ADMIN_TELEGRAM_ID with your Telegram user ID
- * 3. Replace DATABASE_URL with your Neon/PostgreSQL connection string
- * 4. Replace WEBHOOK_SECRET with a random secret string
  */
 
 export const CONFIG = {
   /** Telegram Bot Token from @BotFather */
-  TELEGRAM_BOT_TOKEN: "PASTE_YOUR_BOT_TOKEN_HERE",
+  TELEGRAM_BOT_TOKEN: "8955148796:AAEbW3o_8IUu4v2z-m7YY1Sd4_GLUQgPddg",
 
-  /** Telegram User ID of the bot admin (get from @userinfobot) */
+  /**
+   * Telegram User ID of the bot admin.
+   * IMPORTANT: This must be a NUMBER, not a username.
+   * Get your numeric ID: open Telegram → search @userinfobot → send any message → copy the ID number.
+   * Example: 123456789
+   */
   ADMIN_TELEGRAM_ID: 0,
 
   /** Random secret for webhook and cron authentication */
-  WEBHOOK_SECRET: "CHANGE_THIS_TO_A_RANDOM_SECRET_STRING",
+  WEBHOOK_SECRET: "teamwork_bot_secret_2026_xK9mBz",
 
-  /** PostgreSQL connection string (e.g., from Neon) */
-  DATABASE_URL: "PASTE_YOUR_DATABASE_URL_HERE",
+  /**
+   * PostgreSQL connection string (e.g., from Neon, Supabase, Vercel Postgres).
+   * If left empty, the bot will use an in-memory fallback (data resets on cold start).
+   * For production, set a real database URL.
+   */
+  DATABASE_URL: "",
 
   /** Vercel deployment domain (set after deploy) */
   VERCEL_DOMAIN: "YOUR-PROJECT.vercel.app",
